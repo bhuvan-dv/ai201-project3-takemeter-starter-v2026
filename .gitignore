@@ -20,6 +20,7 @@ models/
 # they are not evidence of anything — results.json is. Without this line a
 # `git add -A` in Colab commits a model checkpoint to your repo.
 takemeter_out/
+takemeter_out_run2/
 
 # OS noise
 .DS_Store
