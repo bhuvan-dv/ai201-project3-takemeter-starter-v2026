@@ -51,63 +51,84 @@ whether you hit them:
 
 ---
 
-## 1.
+## 1. Overall accuracy
 
-<!-- Your criterion. It must name a number. -->
+The model scores at least **0.65 overall accuracy** on the held-out test split.
 
-
-
-**Why this target:**
-
-
-
----
-
-## 2.
-
-<!-- Your criterion. -->
-
-
-
-**Why this target:**
-
-
+**Why this target:** `hot_take` is 55.7% of my 212-row CSV (118/212), so a classifier
+that always guesses `hot_take` and nothing else already scores about 0.56 on
+accuracy without having learned anything. 0.65 is deliberately set above that
+naive-majority baseline — it's the line past which the model has to actually be
+reading `analysis` and `reaction` posts correctly some of the time, not just
+exploiting the class skew in r/movies-style discussion threads.
 
 ---
 
-## 3.
+## 2. Per-label performance
 
-<!-- Your criterion. -->
+Every label clears its own F1 floor on the test split: `hot_take` ≥ **0.65**,
+`analysis` ≥ **0.45**, `reaction` ≥ **0.30**.
 
-
-
-**Why this target:**
-
-
-
----
-
-## 4.
-
-<!-- Your criterion. -->
-
-
-
-**Why this target:**
-
-
+**Why this target:** The three labels don't have equal data — 118 `hot_take`,
+65 `analysis`, 29 `reaction` — so one shared bar would be unfair to the
+smallest class and too easy for the largest. `reaction`'s floor is the
+loosest because only ~4 of its examples land in the 15% test split (29 × 0.15
+≈ 4.4); an F1 computed on 4 examples moves in quarter-steps, so 0.30 is about
+as precise a number as that split size can support. `analysis` sits in the
+middle because it's a harder distinction to learn than `hot_take` — it
+requires the model to notice *whether* a specific fact is doing argumentative
+work, not just spot emotionally charged language.
 
 ---
 
-## 5.
+## 3. Balance / collapse into the majority label
 
-<!-- Your criterion. -->
+On the held-out test split, the model predicts `hot_take` for **no more than
+75%** of the posts.
 
+**Why this target:** This is the imbalance risk made concrete and measurable.
+Because `hot_take` is already the majority of my training data, the single
+most likely failure mode for this model isn't "confused between two labels" —
+it's "learned to just say `hot_take` most of the time because that's usually
+right." A model that predicts `hot_take` on, say, 95% of the test set could
+still clear criterion 1's accuracy bar by accident. Capping the predicted
+share at 75% (above the 55.7% true share, but well short of "guesses one
+thing almost always") is a specific, checkable way to catch that failure mode
+even if overall accuracy looks fine.
 
+---
 
-**Why this target:**
+## 4. Consistency (self-agreement on the cold-labelled posts)
 
+Relabelling the 18 posts I marked `cold` in `labels.csv` — without looking at
+my original labels first — I agree with my own earlier labels on at least
+**15 of 18 (≈ 83%)**.
 
+**Why this target:** The `cold` rows are the ones I labelled before I'd read
+any AI-assisted pre-labels, specifically as an honesty check per Milestone 4.
+If I can't reproduce my own calls on my own taxonomy most of the time, the
+200+ rows I labelled quickly with AI assistance were built on a taxonomy I
+wasn't applying consistently either, and that's a labelling problem, not a
+modelling one. 83% (15/18) is high but not 100%, because I already know two
+or three of these 18 sit right on the `analysis`/`hot_take` boundary — the
+same boundary my decision rule in the README exists to resolve, and even a
+written rule doesn't make every edge case mechanical on a second pass.
+
+---
+
+## 5. Confidence means something
+
+The model's predictions in the most-confident third of the test set are
+correct at least **15 percentage points more often** than its predictions in
+the least-confident third.
+
+**Why this target:** `distilbert-base-uncased` outputs a softmax score
+whether or not it actually knows anything, so the only way to tell if that
+number is meaningful is to check whether high confidence actually tracks
+correctness. A 15-point gap is a real, checkable separation — not "confident
+predictions are slightly better," which could happen by chance on a 32-row
+test split, but a gap big enough that it's unlikely to be noise given how few
+test examples (≈32, per the 70/15/15 split) this model gets scored on.
 
 ---
 
