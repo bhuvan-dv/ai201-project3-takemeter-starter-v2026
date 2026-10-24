@@ -1,0 +1,194 @@
+{
+  "model": "facebook/bart-large-mnli",
+  "n": 32,
+  "seed": 42,
+  "held_out": true,
+  "used_definitions": true,
+  "scores": {
+    "n": 32,
+    "accuracy": 0.3125,
+    "f1_macro": 0.3303030303030303,
+    "per_label": {
+      "analysis": {
+        "precision": 0.3,
+        "recall": 0.6,
+        "f1": 0.4,
+        "support": 10
+      },
+      "hot_take": {
+        "precision": 0.25,
+        "recall": 0.05555555555555555,
+        "f1": 0.0909090909090909,
+        "support": 18
+      },
+      "reaction": {
+        "precision": 0.375,
+        "recall": 0.75,
+        "f1": 0.5,
+        "support": 4
+      }
+    }
+  },
+  "predictions": [
+    {
+      "text": "So I went and saw it on a weekend with a buddy just because we liked seeing movies. We went into it with no idea what it was about besides \"epic dragon movie\". I watched so many fans of the book get up angrily about 35 minutes in and storm out. We talked to one of the theatre employees and they said that they had never received so many refund requests for a bad film before Eragon.",
+      "gold": "analysis",
+      "predicted": "reaction"
+    },
+    {
+      "text": "Totally not my typical type of movie. I watched it because the cover art made me curious. I get what he was doing, but it definitely didn\u2019t land with me. I just kept asking \u201cwhy\u201d to myself through the whole film and never got into it. Honestly felt the same about Poor Things from the same director. He\u2019s got his thing and it\u2019s not for me.",
+      "gold": "reaction",
+      "predicted": "reaction"
+    },
+    {
+      "text": "It happened with the America 250 celebration thing. Almost all of the musical acts dropped out when they learned how divisive and political it was. Pretty sure they were duped into thinking it was a bipartisan \u201ccelebration\u201d of America or something.",
+      "gold": "analysis",
+      "predicted": "hot_take"
+    },
+    {
+      "text": "Watson, but it was a shit series. Cameo on Curb Your Enthusiasm. I saw an art exhibit in LA that was impressive and a week later found out she was the artist. So many actors are shit at art. CoughJimCarreyCough.",
+      "gold": "hot_take",
+      "predicted": "analysis"
+    },
+    {
+      "text": "I saw the trailer too and I kept waiting for the moment where it signaled some introspection. It seemed instead like the asshole rich guy character got what he wanted and everyone clapped. If that wasn't the intent it was a bad first impression...",
+      "gold": "hot_take",
+      "predicted": "analysis"
+    },
+    {
+      "text": "Make sure it's the 2008 French original, not the 2016 American remake!",
+      "gold": "analysis",
+      "predicted": "analysis"
+    },
+    {
+      "text": "I just watched Marty Supreme and was similarly disenfranchised by a very hyped movie.",
+      "gold": "reaction",
+      "predicted": "reaction"
+    },
+    {
+      "text": "I just re-read this the other night. The original comic run is fantastic and I forgot it was going to get made into a film but it's been several years since that announcement.",
+      "gold": "reaction",
+      "predicted": "analysis"
+    },
+    {
+      "text": "The bathtub scene still gives me the creeps and when they called back to it in Dr Sleep it scared the shit out of me",
+      "gold": "hot_take",
+      "predicted": "reaction"
+    },
+    {
+      "text": "Ngl, I'm crying a bit. And I just realized it's Sunday, and it's coming down. I've got the song running through my head on repeat now.",
+      "gold": "reaction",
+      "predicted": "reaction"
+    },
+    {
+      "text": "I'd put Gone With The Wind (1939) on that list. There was a surge of interest in Nosferatu (1922) when the re-make came out, and Metropolis (1927) is always popular. My favorite Lang film is \"M\" (1931), which benefits from not being a silent movie, but it is in German. Marx Brothers (1928-1949)? Chaplin? Laurel and Hardy? All classics.",
+      "gold": "analysis",
+      "predicted": "analysis"
+    },
+    {
+      "text": "I love both movies. But I've never thought of the two like this. I agree wholeheartedly with your analysis. As a side note. _I'll make a man out of you_ is my favorite Disney song.",
+      "gold": "hot_take",
+      "predicted": "analysis"
+    },
+    {
+      "text": "Yeah but that was immersive. There was an era when no one was out on the town because they didn't want to miss their TV episode that week, and the day after, it's all people talked about. Major FOMO with network TV. The long scenes with Di Caprio acting in a western were brilliant. Too much of Hollywood is full action for 2 hours and it gets tedious fast.",
+      "gold": "hot_take",
+      "predicted": "analysis"
+    },
+    {
+      "text": "This article and a lot of the response online is taking it way too seriously. The hosts asked him who his favourite Luigi in recent American history was and Key immediately cracked up before Day had even answered. Everyone knew where it was going, it was an obvious setup for some dark humour and not a serious question about serious political views. Like maybe he actually believes that, maybe he doesn't, but if that's what you're concerned about then you completely missed the point here.",
+      "gold": "hot_take",
+      "predicted": "hot_take"
+    },
+    {
+      "text": "They love to blame flops like this on things like feminism, but generally it's just because Disney has no idea what they are doing anymore after killing off the A-listers and then releasing nothing but wet farts for the last five years.",
+      "gold": "hot_take",
+      "predicted": "analysis"
+    },
+    {
+      "text": "[Yuki's Revenge on IMDB](https://www.imdb.com/title/tt39075285/), rocking a predictable 5.6 score. [Here's the trailer on YouTube](https://www.youtube.com/watch?v=x7h1aMVdBEk). I haven't watched it with sound, but the art style is horrendous. Bloody shame. I just want a proper, no bullshit live action Kill Bill 3 with Uma Thurman where a now grown up daughter of Copperhead comes back for revenge. Is that really too much to ask.",
+      "gold": "analysis",
+      "predicted": "analysis"
+    },
+    {
+      "text": "They must be looking for ideas on how to stuff more ads into a service I already pay $180 a year for.",
+      "gold": "analysis",
+      "predicted": "hot_take"
+    },
+    {
+      "text": "I don't care what people say. I like these movies. They're not good, but they're fun",
+      "gold": "hot_take",
+      "predicted": "reaction"
+    },
+    {
+      "text": "Oh lord. This did not need to be a two parter. Man, I miss movies being well contained 90 minute stories.",
+      "gold": "hot_take",
+      "predicted": "analysis"
+    },
+    {
+      "text": "Fucking yes it is! I think it came out at the wrong time and was advertised to the wrong audience. Ricci and Goodman were gold in that film and the entire thing is a unique work of fun art.",
+      "gold": "hot_take",
+      "predicted": "analysis"
+    },
+    {
+      "text": "Three of his movies are my favorites though I haven\u2019t seen anything of his short of great yet. Yojimbo (1961) Mifune is probably at his coolest here. An action-comedy that plays with every bit of a small town. Rashomon (1950) Groundbreaking and yet it still holds up completely. Incredible use of weather. Ran (1985) If you had to press me, I\u2019d say this is my favorite simply because of his incredible use of color.",
+      "gold": "analysis",
+      "predicted": "analysis"
+    },
+    {
+      "text": "[Cody Johnson put it very well](https://www.youtube.com/watch?v=OZ28knLt5Rs) when he talked about how movie executives saw that Barbie was a smart and funny movie with a good message and decided that meant they needed to make more movies about Mattel toys. Executives don't even like movies very much. They just want to make money and they do whatever they think will make money, not make good movies.",
+      "gold": "hot_take",
+      "predicted": "analysis"
+    },
+    {
+      "text": "Crazy how both of those washed up losers stopped making good movies. Like they were good once upon a time, now they play the same boring af predictable characters in every shitty B-tier action movie they jump on. Wild.",
+      "gold": "hot_take",
+      "predicted": "analysis"
+    },
+    {
+      "text": "It was bland. I watched it less than a week ago and it's fading from memory fast. I would not recommend it to the older siblings who grew up on He-Man and She-Ra. Nothing *terrible*, just milquetoast.",
+      "gold": "hot_take",
+      "predicted": "analysis"
+    },
+    {
+      "text": "And it has the best horror movie reaction/decision ever: \u201cWe\u2019re leaving. \ud83d\ude10\u201d",
+      "gold": "hot_take",
+      "predicted": "reaction"
+    },
+    {
+      "text": "I have same experience with the acid scene as a kid, and I can suggest Our RoboCop Remake to get a good laugh.",
+      "gold": "hot_take",
+      "predicted": "reaction"
+    },
+    {
+      "text": "Lost in Translation is my personal favourite movie of all time, but weirdly enough, it's her only good movie People down voting, am I wrong? What other movie of hers is worth watching?",
+      "gold": "hot_take",
+      "predicted": "analysis"
+    },
+    {
+      "text": "Tv\u00e5 main reasons: 1. Medium budget films are not economically viable anymore. 30-75 million dollar films where these comedies would fall are too risky and don't pay off. 2. Comedies have been made into comicbook-movies. I hate it.",
+      "gold": "analysis",
+      "predicted": "analysis"
+    },
+    {
+      "text": "Game of Thrones basically already fits. The main book series might not finish, and the main TV show disappointed people, but the world GRRM built is spawning all sorts of spinoff stories. Who's to say what happens after he eventually dies and loses control over the franchise?",
+      "gold": "analysis",
+      "predicted": "hot_take"
+    },
+    {
+      "text": "I took my kid and his friend to see Deadpool, the first one. That was my last time for me. They could offer a better experience, something that would draw me, but they're not even close to matching what I have at home for now. And, maybe they *couldn't* do it profitably anymore, I don't know. Twenty years from now, movie theaters will only be left in big cities, that have enough people nearby to support them. But, even then, they'll need to change what they do.",
+      "gold": "hot_take",
+      "predicted": "analysis"
+    },
+    {
+      "text": "I love Jon Hamm and I hope to see him in some big roles, but jesus christ dude I think I sprained something rolling my eyes this hard. I'm going to the urgent care and sending you the bill for it",
+      "gold": "hot_take",
+      "predicted": "analysis"
+    },
+    {
+      "text": "....what? S8 wasn't even a book. The entirety of the books were filmed, thus proving him wrong.",
+      "gold": "analysis",
+      "predicted": "analysis"
+    }
+  ]
+}
