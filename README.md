@@ -311,6 +311,14 @@ No row's label is the heuristic's raw, unreviewed output.
 
 ---
 
+**Stretch features declared for unit 6:** all three — a confidence check,
+a per-label error write-up for the worst label, and a second measured
+improvement (30 new `reaction` examples, retrained and logged the same
+way as the first improvement). See the three **Stretch** sections after
+**What's Still Broken**.
+
+---
+
 ## Baseline vs. Trained
 
 Both models scored on the same 32 held-out posts in `test_split.csv`.
@@ -571,6 +579,146 @@ it's really the same root cause as #2: whichever seed's split happens to
 make `reaction` and the harder `analysis` posts least learnable, the model
 falls back toward `hot_take` more. More `reaction` data is the same fix as
 above.
+
+---
+
+## Stretch: Confidence Check
+
+**Declared before building.** Are the model's confident predictions right
+more often than its unsure ones, and did that get more or less true after
+the fix?
+
+| | Seed 42 | Seed 7 | Seed 2024 | Average |
+|---|---|---|---|---|
+| Before — most-confident third accuracy | 0.70 | 0.70 | 0.60 | 0.667 |
+| Before — least-confident third accuracy | 0.60 | 0.30 | 0.50 | 0.467 |
+| Before — gap | 10 pts | 40 pts | 10 pts | 20 pts |
+| After — most-confident third accuracy | 0.70 | 0.70 | 0.90 | 0.767 |
+| After — least-confident third accuracy | 0.30 | 0.40 | 0.40 | 0.367 |
+| After — gap | 40 pts | 30 pts | 50 pts | 40 pts |
+
+Before the fix, confidence barely meant anything, and inconsistently —
+the gap bounced from 10 to 40 to 10 points because a model that only ever
+says `hot_take` is "confident" about the same thing regardless of whether
+it's right, so whether its most-confident third happened to be correct was
+mostly luck in how the split fell. After the fix, the gap is bigger (40
+points average, up from 20) **and** far steadier across seeds (30–50 vs.
+10–40) — real evidence the model's softmax score became more meaningful
+once it started actually attempting all three labels. `mean_when_right`
+vs. `mean_when_wrong` tells the same story: before, right and wrong guesses
+differed by only ~0.012–0.013 in average confidence (right: 0.526–0.578,
+wrong: 0.513–0.565 — barely separated); after, the gap widened to
+~0.03–0.08 (right: 0.633–0.671, wrong: 0.572–0.618).
+
+---
+
+## Stretch: Per-Label Error Write-Up — `reaction`
+
+**Declared before building.** `reaction` is the worst label by a wide
+margin: F1 0.00 on every one of the three seeds, before **and** after the
+epoch fix. It is confused with exactly one other label, `hot_take` —
+every single `reaction` test post, on every seed, gets predicted
+`hot_take`. Nothing is ever confused with `analysis`.
+
+The four real `reaction` posts in the held-out test split:
+
+1. *"Totally not my typical type of movie... I just kept asking 'why' to
+   myself through the whole film and never got into it... Honestly felt
+   the same about Poor Things from the same director."*
+2. *"I just watched Marty Supreme and was similarly disenfranchised by a
+   very hyped movie."*
+3. *"I just re-read this the other night. The original comic run is
+   fantastic and I forgot it was going to get made into a film..."*
+4. *"Ngl, I'm crying a bit. And I just realized it's Sunday, and it's
+   coming down. I've got the song running through my head on repeat now."*
+
+What they have in common, and why the model keeps losing them to
+`hot_take`: three of the four (#1, #2, #3) report a personal, just-had
+reaction using flat, muted, almost critical-sounding language —
+"disenfranchised," "didn't land," "never got into it," "fantastic" —
+which is lexically indistinguishable from how my `hot_take` training
+examples phrase a confident opinion. The only thing marking these as
+`reaction` rather than `hot_take` is that the writer is reporting their
+own immediate experience rather than arguing a general claim about the
+work — a *structural* distinction (first-person, just-happened framing)
+rather than a vocabulary one. A small model trained on ~29–59 `reaction`
+examples doesn't have enough exposure to that structural pattern to pick
+it up; it falls back to the words it's seen most, and those words look
+like `hot_take`. Only #4 reads as unambiguously emotional ("crying," "the
+song running through my head"), and even that one still got called
+`hot_take` on every seed — suggesting the model hasn't learned the
+`reaction` category as a concept at all, vivid or not, so much as it has
+learned to never predict it.
+
+---
+
+## Stretch: A Second Measured Improvement
+
+**Declared before building.** The diagnosis above pointed at `reaction`
+specifically: F1 0.00 on every seed, before and after the epoch fix, with
+only ~29 training rows to learn from. The one thing epochs couldn't fix
+was data volume for that label, so the second change is exactly the kind
+the brief names: **30 more real `reaction` examples**, collected and
+labelled with the same care as the original 212.
+
+**Where they came from:** `lemmy.world`'s public `/api/v3/search` endpoint,
+scoped to the `!movies` community, searching comment text for
+reaction-shaped language — `"just watched"`, `"finally watched"`,
+`"rewatch"`, `"RIP"`, `"cried"`/`"sobbing"`, `"my heart"`, `"obsessed"`,
+`"loved it"`, `"in theater"` — the same targeted-search approach the unit 5
+README already used to find `reaction` posts, because they don't show up
+reliably in the general feed. I pulled ~270 candidate comments across
+those queries, dropped anything already in `labels.csv`, anything that read
+as a general argued claim rather than a personal in-the-moment report (my
+own decision rule — a post like *"Amazing movie, gets better at each
+rewatch"* is a `hot_take`, not a `reaction`, no matter how positive), and
+hand-labelled the cleanest 30 as `reaction`. They're appended to
+`labels.csv` with `note` = `unit6 stretch: added for reaction (thinnest
+label)...`, so they're distinguishable from the unit 5 rows.
+
+**New label counts:** `hot_take` 118, `analysis` 65, `reaction` 59 (up from
+29) — 242 rows total, no label over 70%.
+
+### Run Log — Second Improvement
+
+Device: **mps**, 8 epochs, lr 2e-5, batch 16, 242-row `labels.csv` (test
+split grew from 32 to 37 posts, 9 of them now `reaction`) — otherwise
+identical to the first improvement run.
+
+| Criterion | Target | Seed 42 | Seed 7 | Seed 2024 | Verdict |
+|---|---|---|---|---|---|
+| 1. Overall accuracy | ≥ 0.65 | 0.595 | 0.514 | 0.622 | MISSED |
+| 2. Per-label F1 (`hot_take`≥.65 / `analysis`≥.45 / `reaction`≥.30) | all three | .63/.63/.43 | .57/.57/.18 | .71/.71/.00 | MISSED |
+| 3. Predicted `hot_take` share | ≤ 75% | 62.2% | 64.9% | 81.1% | MISSED |
+| 4. Self-agreement on 18 `cold` posts (unchanged) | ≥ 15/18 | 15/18 (83%) | — | — | MET |
+| 5. Confidence gap | ≥ 15 pts | 25 pts | 8 pts | 17 pts | MISSED |
+
+**Did it help, and how do I know:** Yes and no, and both halves are worth
+saying plainly. It clearly helped on the exact thing the diagnosis
+targeted: `reaction` F1 was 0.00 on every seed with 29 training rows, and
+with 59 rows it's 0.43 and 0.18 on two of three seeds (still 0.00 on the
+third) — the model finally started treating `reaction` as a real option
+instead of never predicting it, which neither the original run nor the
+epochs-only improvement achieved. `hot_take` share also improved on two
+of three seeds (62–65%, down from ~75–100% before).
+
+But it did **not** help uniformly, and I'm reporting that honestly rather
+than only the good half. Seed 7's overall accuracy (0.514) is actually
+*worse* than the very first "before" run (0.562), and the confidence gap
+got less reliable, not more (8–25 pts, versus a steady 30–50 pts after
+the epochs-only fix) — adding a label the model can sometimes predict
+correctly seems to have made its confidence score noisier, because now a
+"confident" wrong guess on the newly-contested `hot_take`/`reaction`
+boundary is possible in a way it wasn't when the model only ever said one
+thing. None of the five criteria flip to MET overall relative to the
+first improvement; what changed is *which* failure mode shows up — a
+less-collapsed, less-predictable model instead of a totally collapsed,
+perfectly-predictable one. Given more than one unit's worth of time, the
+obvious next move is combining both changes (more `reaction` data *and*
+enough epochs to let the model settle on the new boundary) rather than
+stopping at 8.
+
+---
 
 **The gap between what I meant my labels to capture and what the model
 learned:** My taxonomy draws its hardest line on *whether a fact is doing
