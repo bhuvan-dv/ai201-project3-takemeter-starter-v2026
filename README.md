@@ -313,23 +313,34 @@ No row's label is the heuristic's raw, unreviewed output.
 
 ## Baseline vs. Trained
 
-<!-- Both models on the same posts. `python baseline.py --trained results.json`
-     prints this table for you. -->
+Both models scored on the same 32 held-out posts in `test_split.csv`.
+`facebook/bart-large-mnli` (zero-shot, reading `label_definitions.txt`) is the
+baseline; "Trained" is the unit 5 model (seed 42, 3 epochs, `results.json`).
 
 | Measure | Baseline | Trained | Difference |
 |---|---|---|---|
-| Overall accuracy |  |  |  |
-| Macro F1 |  |  |  |
-| F1 — `label_one` |  |  |  |
-| F1 — `label_two` |  |  |  |
+| Overall accuracy | 0.312 | 0.562 | +0.250 |
+| Macro F1 | 0.330 | 0.240 | -0.090 |
+| F1 — `analysis` | 0.400 | 0.000 | -0.400 |
+| F1 — `hot_take` | 0.091 | 0.720 | +0.629 |
+| F1 — `reaction` | 0.500 | 0.000 | -0.500 |
 
-**What I predicted before I looked:**
-<!-- Milestone 1 asks you to write this BEFORE seeing the trained numbers. A
-     prediction made afterwards isn't one. -->
+**What I predicted before I looked:** I expected the trained model to win on
+overall accuracy, since it had 148 labelled examples to learn from and the
+baseline had none — but I expected the baseline to do better on `analysis`
+and `reaction`, because unit 5's run had already shown the trained model
+collapsing on exactly those two labels.
 
-**What the gap actually means:**
-<!-- If the baseline matched your trained model, your fine-tuning added
-     nothing — and that is a real finding, not a failure. Say it plainly. -->
+**What the gap actually means:** The trained model's accuracy win is hollow.
+It beats the baseline on accuracy only because it always guesses `hot_take`,
+the majority label, which happens to be correct 56% of the time on this
+split — not because it learned to read the posts. The zero-shot baseline
+never saw a single training example, but it still attempts `analysis` and
+`reaction` and gets real credit for it (F1 0.40 and 0.50), which is why its
+macro F1 (0.330) actually beats the trained model's (0.240). Fine-tuning
+here didn't teach the model the taxonomy — it taught the model to exploit
+the class skew, and did it worse on the two minority labels than a model
+that was never trained at all.
 
 
 
@@ -337,32 +348,32 @@ No row's label is the heuristic's raw, unreviewed output.
 
 ## Run Log — Before
 
-<!-- Five criteria across three seeds. The notebook's section 6 prints the
-     spread table; the Target and Verdict columns are yours. -->
+Device: **mps** (Apple Silicon GPU), torch 2.14.1, 3 epochs, lr 2e-5, batch 16.
 
 | Criterion | Target | Seed 42 | Seed 7 | Seed 2024 | Verdict |
 |---|---|---|---|---|---|
-| 1.  |  |  |  |  |  |
-| 2.  |  |  |  |  |  |
-| 3.  |  |  |  |  |  |
-| 4.  |  |  |  |  |  |
-| 5.  |  |  |  |  |  |
+| 1. Overall accuracy | ≥ 0.65 | 0.562 | 0.562 | 0.562 | MISSED |
+| 2. Per-label F1 (`hot_take`≥.65 / `analysis`≥.45 / `reaction`≥.30) | all three | .72 / .00 / .00 | .72 / .00 / .00 | .72 / .00 / .00 | MISSED |
+| 3. Predicted `hot_take` share | ≤ 75% | 100% | 100% | 100% | MISSED |
+| 4. Self-agreement on 18 `cold` posts (one-time, not per-seed) | ≥ 15/18 | 15/18 (83%) | — | — | MET |
+| 5. Confident-third vs. unsure-third accuracy gap | ≥ 15 pts | 10 pts | 40 pts | 10 pts | MISSED |
 
 ### Confusion matrix
 
-<!-- ⚠️ TYPED AS A MARKDOWN TABLE. The notebook prints one ready to paste.
-     An image of a matrix earns nothing. -->
+Seed 42 (identical shape on seeds 7 and 2024 — see note below):
 
-| true \ predicted |  |  |  |
+| true \ predicted | analysis | hot_take | reaction |
 |---|---|---|---|
-| **** |  |  |  |
-| **** |  |  |  |
-| **** |  |  |  |
+| **analysis** | 0 | 10 | 0 |
+| **hot_take** | 0 | 18 | 0 |
+| **reaction** | 0 | 4 | 0 |
 
-**My biggest off-diagonal number, and what it means:**
-<!-- Not "the model made mistakes" — WHICH boundary it didn't learn, and which
-     direction. "7 real analysis posts were called hot_take and only 3 went the
-     other way" is a direction, not just an error rate. -->
+**My biggest off-diagonal number, and what it means:** All 10 real
+`analysis` posts and all 4 real `reaction` posts were called `hot_take`,
+and nothing went the other direction. This isn't a boundary the model
+half-learned — it's a model that never predicts anything but `hot_take`,
+on every single post, on all three seeds. That's not a confusable pair;
+it's total collapse to the majority label.
 
 
 
@@ -370,27 +381,77 @@ No row's label is the heuristic's raw, unreviewed output.
 
 ## Verdicts and Diagnoses
 
-<!-- MET or MISSED against LAST UNIT's target. The target has to hold across
-     all three seeds, not turn up sometimes. -->
-
 | # | Criterion | Target | Verdict | How I decided |
 |---|---|---|---|---|
-| 1 |  |  |  |  |
-| 2 |  |  |  |  |
-| 3 |  |  |  |  |
-| 4 |  |  |  |  |
-| 5 |  |  |  |  |
+| 1 | Overall accuracy | ≥ 0.65 | MISSED | 0.562 on all three seeds — not close, and perfectly stable, which is itself a clue. |
+| 2 | Per-label F1 | `hot_take`≥.65, `analysis`≥.45, `reaction`≥.30 | MISSED | `hot_take` clears its floor every seed (.72); `analysis` and `reaction` score exactly 0.00 every seed. |
+| 3 | Balance | ≤ 75% predicted `hot_take` | MISSED | Model predicted `hot_take` for 100% of the test set on every seed — not "lopsided," total. |
+| 4 | Self-agreement on `cold` posts | ≥ 15/18 | MET | Relabelled the 18 `cold` posts blind (without looking at my original labels first) and matched myself on 15/18 — see below. |
+| 5 | Confidence gap | ≥ 15 pts, all seeds | MISSED | Gap was 10, 40, and 10 points across the three seeds — only seed 7 clears it, and the target has to hold on all three. |
 
 **Diagnoses**
 
-<!-- For each miss: the cause, and how you know. The four common causes are:
-     too few examples for a label, a boundary you applied inconsistently, a
-     genuinely hard label pair, and a task the model can't reach from this
-     much data.
+**Criteria 1, 2, 3 — all one cause.** The confusion matrix is unambiguous:
+on every one of the three seeds, the model predicts `hot_take` for literally
+every post in the test set, including all 10 `analysis` posts and all 4
+`reaction` posts. That single fact explains the accuracy miss (it's just
+the majority-class rate, 18/32 ≈ 0.562), the per-label F1 miss (`analysis`
+and `reaction` get 0 recall because the model never once guesses them),
+and the balance miss (100% is as collapsed as a model can get).
 
-     ⚠️ Use your agreement report as evidence. It is the only instrument you
-     have that can tell a LABELLING problem from a MODEL problem, and this
-     section is graded on whether you used it that way. -->
+The cause is **too little data for the model to find anything better than
+majority guessing in the training budget it got** — not a labelling
+problem. I know that because:
+
+- **The agreement report rules out a labelling-consistency problem.** I
+  matched the staff set 30/30 (100%) under a taxonomy I didn't write (see
+  Agreement Report below). If I can apply someone else's rule perfectly,
+  the 212 rows I labelled under my own rule are unlikely to be the thing
+  sabotaging the model.
+- **Unit 5's stretch run is the direct evidence it's a training-budget
+  problem, not a data-ceiling problem.** Going from 3 to 5 epochs alone
+  (same data, same split, `results_second_run.json`) moved `analysis` F1
+  from 0.00 to 0.18 — the model started finding a non-majority answer
+  without any new data. That's what motivated the improvement below:
+  if 2 more epochs partially breaks the collapse, more epochs should break
+  it further.
+- With only 65 `analysis` and 29 `reaction` rows total (≈10 and ≈4 in any
+  15% test split), the model has very little signal for those two labels
+  relative to 118 `hot_take` rows — a real contributing factor, but the
+  stretch run shows training length is the lever that actually moves, so
+  that's the one I changed first.
+
+**Criterion 5 (confidence gap).** This isn't really a separate cause — it's
+a symptom of the same collapse. A model that always predicts `hot_take`
+is "confident" about `hot_take` and nothing else; whether its most-confident
+third happens to be right depends entirely on how many true `hot_take`
+posts land in that third by chance, which is why the gap bounces from 10
+to 40 to 10 points across seeds instead of sitting still. A model with no
+real decision boundary can't have a meaningful confidence signal.
+
+**How I relabelled the 18 `cold` posts (criterion 4):** I re-read each post's
+text with the labels hidden and applied my own decision rule fresh, then
+compared to my original calls. 15 of 18 matched. The 3 that didn't:
+
+1. *"This is sad. Her father said she was using drugs since 13... makes me
+   really angry..."* — Originally `analysis`; on the blind pass I called it
+   `reaction` (the fact triggers the feeling, it isn't the argument — the
+   post is "this makes me angry," not a claim the fact is proving).
+2. *"Aliens is more similar to Pitch Black... Can you name any other
+   character in Pitch Black besides Riddick?"* — Originally `hot_take`; on
+   the blind pass I called it `analysis` (the named-cast comparison is the
+   entire support for "better movie," which is exactly what my own decision
+   rule calls load-bearing).
+3. *"What actresses got nominated? ... maybe Ryan was a lot better..."* —
+   Originally `analysis`; on the blind pass I called it `hot_take` (no
+   specific name or figure is actually stated, just rhetorical questions —
+   it reads more like pushback than an argument built on a checkable fact).
+
+All three mismatches sit on the same boundary — `analysis` vs. `hot_take` —
+which is the hardest one I named in the unit 5 README. That's a small,
+genuine inconsistency in my own labelling at the margins, but at 83% it's
+not the dominant explanation for a model that collapses 100% of the time;
+the training-budget cause above does almost all the work.
 
 
 
@@ -404,47 +465,30 @@ No row's label is the heuristic's raw, unreviewed output.
      data/staff_taxonomy.md, not your own — so every argument below is made
      from those definitions and those decision rules. -->
 
-**Agreement rate:** ___ / 30 = ___%
+**Agreement rate:** 30 / 30 = 100%
 
-<!-- Nobody grades this number. A 60% who argues every disagreement from the
-     stated rules beats a 95% who wrote "staff was right" nine times. Several
-     of the 30 were chosen because they're genuinely ambiguous — you should be
-     winning some of these. -->
+I labelled all 30 posts in `data/staff_posts.csv` under the definitions and
+decision rules in `data/staff_taxonomy.md` — not my own — before looking at
+`data/staff_labels.csv`. Every one of my 30 calls matched staff's.
 
 **Disagreements**
 
-<!-- Three lines each: the post, both labels, and who you think is right and
-     why — grounded in the staff definitions you were both applying.
+None. `agreement.py` reports 0 disagreements, so there's nothing to
+adjudicate here — see the note below for what I think a 100% rate actually
+means, rather than just taking it as a clean win.
 
-     Then sort each into one of three piles:
-       (a) the rule covered it and I applied it loosely → a consistency problem
-       (b) the rule genuinely doesn't say               → a gap in the definitions
-       (c) the rule is ambiguous here and my reading is defensible → argue it.
-           This is a legitimate win.
-
-     Pile (a) is the one that matters most for your diagnosis: if you applied a
-     written rule two different ways on 30 posts, that is direct evidence about
-     what you did across your own 200. -->
-
-**1.**
-> *The post:*
->
-> *Staff said / I said:*
->
-> *My call, and why:*
->
-> *Which pile:*
-
-**2.**
-> *The post:*
->
-> *Staff said / I said:*
->
-> *My call, and why:*
->
-> *Which pile:*
-
-**What the pattern in my disagreements tells me:**
+**What the pattern in my disagreements tells me:** Zero disagreements on 30
+posts, several of which the staff's own notes flag as `borderline` (sp_005,
+sp_010, sp_014, sp_019, sp_020, sp_028, sp_029), is a genuinely good sign
+about whether I can apply a written rule the way its authors intended, not
+a sign the set was easy. The staff taxonomy's three decision rules map
+almost exactly onto the hardest boundary I already named in my own unit 5
+README (does the fact carry the argument, or just decorate it?), so I'd
+already built the habit the staff rules test for. I take this as real
+evidence that the problem with my trained model (see Verdicts and
+Diagnoses) is not that I apply labelling rules inconsistently — it's that
+212 rows split three ways didn't give the model enough signal to learn the
+boundary in the training budget it got.
 
 
 
@@ -452,24 +496,48 @@ No row's label is the heuristic's raw, unreviewed output.
 
 ## The Improvement
 
-**What I changed:**
+**What I changed:** One training setting — `EPOCHS` from 3 to 8, same
+learning rate (2e-5), same batch size, same `labels.csv`, same splits, same
+three seeds. No relabelling, no new data, no criteria changed.
 
-**Which diagnosis pointed at it:**
+**Which diagnosis pointed at it:** The "before" diagnosis above was total
+collapse to the majority label on every seed. My evidence that *training
+length*, not data volume or labelling, was the lever: unit 5's declared
+stretch run already showed that going from 3 to 5 epochs alone moved
+`analysis` F1 from 0.00 to 0.18 with the exact same data. If 2 extra epochs
+partially broke the collapse, more epochs should break it further — so
+that's what I tested, as the one allowed change.
 
 ### Run Log — After
 
+Device: **mps**, 8 epochs, lr 2e-5, batch 16 — otherwise identical to the
+"before" run.
+
 | Criterion | Target | Seed 42 | Seed 7 | Seed 2024 | Verdict |
 |---|---|---|---|---|---|
-| 1.  |  |  |  |  |  |
-| 2.  |  |  |  |  |  |
-| 3.  |  |  |  |  |  |
-| 4.  |  |  |  |  |  |
-| 5.  |  |  |  |  |  |
+| 1. Overall accuracy | ≥ 0.65 | 0.562 | 0.594 | 0.656 | MISSED |
+| 2. Per-label F1 (`hot_take`≥.65 / `analysis`≥.45 / `reaction`≥.30) | all three | .67/.44/.00 | .68/.53/.00 | .76/.53/.00 | MISSED |
+| 3. Predicted `hot_take` share | ≤ 75% | 75.0% | 71.9% | 84.4% | MISSED |
+| 4. Self-agreement on 18 `cold` posts (unchanged — one-time check) | ≥ 15/18 | 15/18 (83%) | — | — | MET |
+| 5. Confident-third vs. unsure-third accuracy gap | ≥ 15 pts | 40 pts | 30 pts | 50 pts | MET |
 
-**Did it help, and how do I know:**
+**Did it help, and how do I know:** Yes, clearly, even though it didn't
+flip any of the three accuracy-shaped criteria from MISSED to MET. Macro F1
+roughly doubled (0.24 → 0.40 average across seeds), `analysis` F1 went from
+0.00 on every seed to 0.44–0.53, and the model started actually predicting
+`analysis` for real `analysis` posts (4–5 of 10, up from 0) instead of
+dumping everything into `hot_take`. Criterion 5 flipped from MISSED (0 of 3
+seeds) to MET (3 of 3) — a model that's no longer one-note has a confidence
+score that finally means something. Criterion 3 (balance) got close: two of
+three seeds now land under the 75% cap (75.0% and 71.9%), only seed 2024
+stays over it (84.4%), versus 100% on every seed before.
 
-<!-- If it didn't, say so. Relabelling that didn't help is a genuinely
-     interesting result and earns full credit. -->
+What it did **not** fix: `reaction` F1 is still exactly 0.00 on all three
+seeds, before and after. More epochs broke the `analysis`/`hot_take`
+collapse but never taught the model to predict `reaction` at all — which
+makes sense given `reaction` has only 29 rows total (≈4 in any test split),
+the thinnest of the three labels. That's the diagnosis for what's still
+broken, below.
 
 
 
@@ -477,13 +545,43 @@ No row's label is the heuristic's raw, unreviewed output.
 
 ## What's Still Broken
 
-<!-- For each criterion still missed: what you'd do, and why you stopped. -->
+**1. Overall accuracy (≥0.65), still MISSED on 2 of 3 seeds.** The best
+seed (2024) actually clears it at 0.656, but the target has to hold across
+all three and seed 42 is still at 0.562. What I'd try next: the thing I
+didn't touch — real `reaction` examples. 212 rows split three ways gives
+`reaction` only ~29 training rows; everything else staying fixed, that's
+the ceiling on how much headroom is left. I stopped because this unit's
+rule is one change only, and I'd already spent it on epochs.
 
+**2. Per-label F1, still MISSED because `reaction` is 0.00 on every seed,
+before and after.** The model never once predicts `reaction`, even after
+training 8 epochs instead of 3. More training time clearly helps the
+model separate `analysis` from `hot_take` (F1 0.00 → 0.44–0.53), but it did
+nothing for `reaction` — with only ~4 `reaction` posts in any given test
+split, there may simply not be enough signal for 8 epochs of more training
+to find, as opposed to more data. I'd collect 30+ more real `reaction`
+posts next, the same way I found the originals (targeted "just watched" /
+obituary-thread searches, since general-feed posts skew toward `hot_take`
+and `analysis`). I stopped because that's a second change, and this unit
+caps me at one.
 
+**3. Balance (≤75% predicted `hot_take`), still MISSED on 1 of 3 seeds.**
+This one is close — 75.0% and 71.9% on two seeds, 84.4% on the third — and
+it's really the same root cause as #2: whichever seed's split happens to
+make `reaction` and the harder `analysis` posts least learnable, the model
+falls back toward `hot_take` more. More `reaction` data is the same fix as
+above.
 
 **The gap between what I meant my labels to capture and what the model
-learned:**
-<!-- Two sentences. Your confusion matrix is the evidence. -->
+learned:** My taxonomy draws its hardest line on *whether a fact is doing
+argumentative work* — the whole point of `analysis` vs. `hot_take`. The
+confusion matrix shows the model did start learning something like that
+line once it got enough training (4–5 of 10 `analysis` posts right after
+the fix, versus 0 before), but it never learned that `reaction` exists as
+a third option at all — every `reaction` post, on every seed, gets pulled
+into `hot_take` instead. The model learned a two-way boundary where I
+designed a three-way one, and the gap is almost entirely explained by how
+little data the third label had to learn from.
 
 
 
